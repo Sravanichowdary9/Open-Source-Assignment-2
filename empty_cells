@@ -11,6 +11,13 @@ fi
 file="$1"
 sep="$2"
 
+# Check if the input file exists - this should work now
+if [[ ! -f "$file" ]]; then
+    echo "Error: Input file '$file' does not exist."
+    exit 1
+fi
+
+
 awk -v FS="$sep" '
 NR == 1 {
     # store column headers

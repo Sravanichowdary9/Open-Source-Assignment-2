@@ -1,0 +1,64 @@
+#!/bin/bash
+
+input="bgg_dataset.txt"
+output="cleaned_output.tsv"
+
+# Step 1: Get max ID
+max_id=$(awk -F";" 'NR > 1 && $1 ~ /^[0-9]+$/ && $1+0 > max { max = $1+0 } END { print max+1 }' "$input")
+
+awk -v FS=";" -v OFS="\t" -v start_id="$max_id" '
+BEGIN { new_id = start_id }
+
+NR == 1 {
+    # Print header
+    for (i = 1; i <= NF; i++) headers[i] = $i
+    print
+    next
+}
+
+{
+    # Validate and fix ID
+    if ($1 != "" && $1 !~ /^[0-9]+$/) next
+    if ($1 == "") $1 = new_id++
+
+    # Validate Min/Max Players
+    if ($4 == "" || $5 == "") next
+    if ($4 !~ /^[0-9]+$/ || $5 !~ /^[0-9]+$/) next
+    min = $4 + 0
+    max = $5 + 0
+    if (min < 0 || max < 0 || min > max) next
+
+    # ✅ Only enforce numeric, not value range
+    if ($6 == "" || $6 !~ /^[0-9]+$/) next
+    if ($7 == "" || $7 !~ /^[0-9]+$/) next
+
+    # ✅ Users Rated must be >= 0
+    if ($8 == "" || $8 !~ /^-?[0-9]+$/) next
+    users = $8 + 0
+    if (users < 0) next
+
+    # Convert commas to dots in Rating and Complexity
+    gsub(",", ".", $9)
+    gsub(",", ".", $11)
+
+    # Owned Users (col 12)
+    if ($12 != "" && ($12 !~ /^[0-9]+$/ || $12+0 < 0)) next
+
+    # BGG Rank (col 10)
+    if ($10 != "" && ($10 !~ /^[0-9]+$/ || $10+0 < 0)) next
+
+    # Complexity Average (col 11)
+    gsub(",", ".", $11)  # format correction
+    if ($11 != "" && ($11 !~ /^[0-9.]+$/ || $11+0 < 0)) next
+
+
+    # Remove non-ASCII from all fields
+    for (i = 1; i <= NF; i++) {
+        gsub(/[^\t -~]/, "", $i)
+    }
+
+    # Output cleaned line
+    print $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
+}
+' "$input" | tr ';' '\t' | sed 's/\r$//' > "$output"
+

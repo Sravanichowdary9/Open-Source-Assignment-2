@@ -1,0 +1,72 @@
+#!/bin/bash
+
+input="bgg_dataset.tsv"
+
+# 1. Most popular game mechanic (handles multi-word properly)
+echo "Calculating most popular mechanic..."
+cut -f13 "$input" | grep -v "^$" | tr ',' '\n' | sed 's/^ *//;s/ *$//' | sort | uniq -c | sort -nr | head -1 | \
+awk '{
+    count = $1
+    $1 = ""; sub(/^ +/, "")
+    print "The most popular game mechanic is " $0 " found in " count " games"
+}'
+
+# 2. Most popular game domain (handles multi-word properly)
+echo "Calculating most popular domain..."
+cut -f14 "$input" | grep -v "^$" | tr ',' '\n' | sed 's/^ *//;s/ *$//' | sort | uniq -c | sort -nr | head -1 | \
+awk '{
+    count = $1
+    $1 = ""; sub(/^ +/, "")
+    print "The most popular game domain is " $0 " found in " count " games"
+}'
+
+# 3. Correlation between Year Published and Rating Average (skips min > max)
+echo "Calculating correlation between year and rating..."
+awk -F"\t" '
+    NR > 1 && $3 != "" && $9 != "" && $4 <= $5 {
+        x = $3 + 0
+        y = $9 + 0
+        sumx += x
+        sumy += y
+        sumxy += x * y
+        sumx2 += x * x
+        sumy2 += y * y
+        n++
+    }
+    END {
+        numerator = (n * sumxy - sumx * sumy)
+        denom = sqrt((n * sumx2 - sumx * sumx) * (n * sumy2 - sumy * sumy))
+        if (denom == 0) {
+            print "The correlation between the year of publication and the average rating is undefined"
+        } else {
+            r = numerator / denom
+            printf "The correlation between the year of publication and the average rating is %.3f\n", r
+        }
+    }
+' "$input"
+
+# 4. Correlation between Complexity and Rating Average (skips min > max)
+echo "Calculating correlation between complexity and rating..."
+awk -F"\t" '
+    NR > 1 && $11 != "" && $9 != "" && $4 <= $5 {
+        x = $11 + 0
+        y = $9 + 0
+        sumx += x
+        sumy += y
+        sumxy += x * y
+        sumx2 += x * x
+        sumy2 += y * y
+        n++
+    }
+    END {
+        numerator = (n * sumxy - sumx * sumy)
+        denom = sqrt((n * sumx2 - sumx * sumx) * (n * sumy2 - sumy * sumy))
+        if (denom == 0) {
+            print "The correlation between the complexity of a game and its average rating is undefined"
+        } else {
+            r = numerator / denom
+            printf "The correlation between the complexity of a game and its average rating is %.3f\n", r
+        }
+    }
+' "$input"
+

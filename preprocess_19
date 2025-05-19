@@ -1,0 +1,53 @@
+#!/bin/bash
+
+# Usage: ./preprocess bgg_dataset.txt
+# This creates bgg_dataset.tsv in the same directory
+
+if [[ $# -ne 1 ]]; then
+    echo "Usage: $0 <input_file>" >&2
+    exit 1
+fi
+
+input="$1"
+
+# Extract base name without extension and append .tsv
+base=$(basename "$input" .txt)
+output="${base}.tsv"
+
+# Step 1: Get max ID using tab-separated version
+max_id=$(tr ';' '\t' < "$input" | awk -F"\t" '
+    NR > 1 && $1 ~ /^[0-9]+$/ && $1+0 > max { max = $1+0 }
+    END { print max+1 }
+')
+
+# Main preprocessing: convert and clean without skipping rows
+tr ';' '\t' < "$input" | awk -v OFS="\t" -v start_id="$max_id" '
+BEGIN { FS = "\t"; new_id = start_id }
+
+NR == 1 {
+    # Print header
+    print
+    next
+}
+
+{
+    # Replace decimal commas
+    gsub(",", ".", $9)
+    gsub(",", ".", $11)
+
+    # Replace missing or non-numeric ID
+    if ($1 == "" || $1 !~ /^[0-9]+$/) {
+        $1 = new_id++
+    }
+
+    # Remove non-ASCII characters
+    for (i = 1; i <= NF; i++) {
+        gsub(/[^\t -~]/, "", $i)
+    }
+
+    print
+}
+' | sed 's/\r$//' > "$output"
+
+echo "✅ Cleaned output written to: $output"
+

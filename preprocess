@@ -1,0 +1,49 @@
+#!/bin/bash
+
+# Usage: ./preprocess bgg_dataset.txt > cleaned_output.tsv
+
+if [[ $# -ne 1 ]]; then
+    echo "Usage: $0 <input_file>" >&2
+    exit 1
+fi
+
+input="$1"
+
+# Step 1: Get the max valid ID to begin assigning new ones for missing IDs
+max_id=$(cut -d';' -f1 "$input" | grep -E '^[0-9]+$' | sort -n | tail -n1)
+new_id=$((max_id + 1))
+
+# Step 2: Process each line
+{
+    read -r header
+    # Replace semicolons with tabs in header after removing carriage returns and non-ASCII
+    clean_header=$(echo "$header" | tr -d '\r' | tr -cd '\11\12\15\40-\176' | tr ';' '\t' | sed 's/,/./g')
+    echo "$clean_header"
+
+    while IFS= read -r line || [ -n "$line" ]; do
+        # Step 3: Clean line endings and non-ASCII characters
+        line=$(echo "$line" | tr -d '\r' | tr -cd '\11\12\15\40-\176')
+
+        # Step 4: Replace decimal commas with dots
+        line=$(echo "$line" | sed 's/\([0-9]\),\([0-9]\)/\1.\2/g')
+
+        # Step 5: Split into fields by ;
+        IFS=';' read -r -a fields <<< "$line"
+
+        # Step 6: Fix missing ID
+        if [[ -z "${fields[0]// /}" ]]; then
+            fields[0]=$new_id
+            new_id=$((new_id + 1))
+        fi
+
+        # Step 7: Join fields with tab
+        output=""
+        for field in "${fields[@]}"; do
+            output+="${field}\t"
+        done
+
+        # Trim trailing tab and print
+        echo -e "${output%\\t}"
+    done
+} < "$input"
+
