@@ -14,10 +14,6 @@ if [[ ! -f "$file_input" || ! -r "$file_input" ]]; then
     exit 1
 fi
 
-#Extract output filename with tsv file extension to store the cleaned data
-base=$(basename "$file_input" .txt)
-output_filename="${base}.tsv"
-
 #Get the available ID by converting to tabs and extracting the highest numeric ID from column 1
 
 maximum_id=$(tr ';' '\t' < "$file_input" | awk -F"\t" '
@@ -57,4 +53,4 @@ NF == 0 || $0 ~ /^[ \t]*$/ { next }
     }
     print
 }
-' | sed 's/\r$//' > "$output_filename"
+' | sed 's/\r$//'
