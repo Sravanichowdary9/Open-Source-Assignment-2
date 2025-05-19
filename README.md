@@ -1,3 +1,6 @@
+This project processes and analyzes board game data using shell scripting and standard Unix tools. It consists of three main Bash scripts that help identify data issues, clean the dataset, and extract meaningful insights such as the most popular game mechanics, domains, and correlations between rating, year, and complexity.
+
+
 This assignment is divided into three core components:
 
 ### 1. `empty_cells`
@@ -12,17 +15,20 @@ This assignment is divided into three core components:
 ### 2. `preprocess`
 - Cleans the raw dataset:
   - Removes malformed rows
+  - Replacing ; with tabs
   - Normalizes fields
   - Filters invalid values
-  - Handles duplicate or multi-value fields
-- Produces a cleaned version of the dataset (`cleaned.tsv`)
+  - Replacing commas in decimals with dots
+  - Removing non-ASCII characters
+  - Generating new IDs for missing values
+  - Produces a cleaned version of the dataset (`cleaned.tsv`)
 
  **Usage**:
 ./preprocess.sh bgg_dataset.txt
 
 **Output**: A clean, tab-separated file named cleaned.tsv with valid and usable rows.
 
-### 3. `analysis` (in `analysis/`)
+### 3. `analysis` 
 - Performs exploratory analysis on the cleaned dataset:
   - Identifies most popular mechanics/domains
   - Calculates correlations (e.g., year vs rating, complexity vs rating)
