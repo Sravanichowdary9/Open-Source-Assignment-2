@@ -1,0 +1,60 @@
+#!/bin/bash
+
+#Number of arguments is provided is 1  which is the txt file
+if [[ $# -ne 1 ]]; then
+    echo "Usage: $0 <input_file>" >&2
+    exit 1
+fi
+
+file_input="$1"
+
+#Checks if the input file exists and is readable
+if [[ ! -f "$file_input" || ! -r "$file_input" ]]; then
+    echo "Error: Input file '$file_input' does not exist or is not readable." >&2
+    exit 1
+fi
+
+#Extract output filename with tsv file extension to store the cleaned data
+base=$(basename "$file_input" .txt)
+output_filename="${base}.tsv"
+
+#Get the available ID by converting to tabs and extracting the highest numeric ID from column 1
+
+maximum_id=$(tr ';' '\t' < "$file_input" | awk -F"\t" '
+    NR > 1 && $1 ~ /^[0-9]+$/ && $1+0 > max { max = $1+0 }
+    END { print max+1 }
+')
+
+#Clean and convert the dataset by convert ; to tabs,normalize decimal formats and strip non-ASCII characters
+ 
+tr ';' '\t' < "$file_input" | awk -v OFS="\t" -v start_id="$maximum_id" '
+BEGIN { 
+    FS = "\t"
+    new_id = start_id 
+}
+
+NR == 1 {
+    #Print_header 
+    print
+    next
+}
+
+# Skip empty rows woth no data completly
+NF == 0 || $0 ~ /^[ \t]*$/ { next }
+{
+    #Replace decimal commas with . for floats
+    gsub(",", ".", $9)   # Rating Average
+    gsub(",", ".", $11)  # Complexity Average
+    
+    #Replace missing or non-numeric ID with new ID
+    if ($1 == "" || $1 !~ /^[0-9]+$/) {
+        $1 = new_id++
+    }
+    
+    #Remove non-ASCII characters from all fields
+    for (i = 1; i <= NF; i++) {
+        gsub(/[^\t -~]/, "", $i)
+    }
+    print
+}
+' | sed 's/\r$//' > "$output_filename"
