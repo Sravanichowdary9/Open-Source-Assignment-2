@@ -24,7 +24,7 @@ This assignment is divided into three core components:
   - Produces a cleaned version of the dataset (`cleaned.tsv`)
 
  **Usage**:
-./preprocess.sh bgg_dataset.txt
+./preprocess bgg_dataset.txt > cleaned.tsv
 
 **Output**: A clean, tab-separated file named cleaned.tsv with valid and usable rows.
 
