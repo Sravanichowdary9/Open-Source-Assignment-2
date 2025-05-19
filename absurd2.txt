@@ -1,0 +1,4 @@
+ID;Name;Year Published;Min;Max;Time;Age;Users Rated;Rating Average;BGG Rank;Complexity Average;Owned Users;Mechanics;Domains
+1;Game A;2022;2;4;60;10;100;7..0;100;2.0;1000;Deck Building;Thematic Games
+2;Game B;2022;2;4;60;10;100;7,5;100;2,0;1000;Worker Placement;Strategy Games
+3;Game C;2022;2;4;60;10;100;;100;;1000;Card Drafting;Family Games

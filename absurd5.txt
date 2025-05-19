@@ -1,0 +1,3 @@
+ID;Name;Year Published;Min;Max;Time;Age;Users Rated;Rating Average;BGG Rank;Complexity Average;Owned Users;Mechanics;Domains
+🎲;Game A;2020;2;4;60;10;100;8.1;100;3.0;1000;🎯 Precision;Fun Games
+abc;Game B;2020;2;4;60;10;100;7.9;100;2.8;1000;👾 Retro Play;Nostalgia
